@@ -7,7 +7,8 @@
   <style>
     body { font-family: sans-serif; padding: 20px; margin: 0; }
     .question { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
-    .blank-input { width: 100%; max-width: 300px; margin: 10px 0 20px 10px; padding: 8px; font-size: 16px; }
+    .blank-input { width: 100%; max-width: 300px; margin: 10px auto 20px auto; padding: 8px; font-size: 16px; display: block; }
+    .blank-input.incorrect { border: 2px solid red; background-color: #ffecec; }
     .hidden { display: none; }
     .button-column button {
       display: block;
@@ -219,50 +220,55 @@
     }
 
     function renderQuiz() {
-      const container = document.getElementById('quiz-container');
-      container.innerHTML = '';
-
-      currentSet.forEach((q, qIndex) => {
-        const div = document.createElement('div');
-        div.className = 'question';
-        div.innerHTML = `<strong>문제 ${qIndex + 1}.</strong> ${q.question}<br>`;
-
-        const keys = Object.keys(q.answers);
-        keys.forEach((key, i) => {
-          const id = `q${qIndex}_blank${i}`;
-          div.innerHTML += `<input type='text' id='${id}' class='blank-input' placeholder='빈칸 ${key || i + 1} 입력'>`;
+        const container = document.getElementById('quiz-container');
+        container.innerHTML = '';
+  
+        currentSet.forEach((q, qIndex) => {
+          const div = document.createElement('div');
+          div.className = 'question';
+          div.innerHTML = `<strong>문제 ${qIndex + 1}.</strong><br><div style='margin-top: 10px; margin-bottom: 10px;'>${q.question}</div>`;
+  
+          const keys = Object.keys(q.answers);
+          keys.forEach((key, i) => {
+            const id = `q${qIndex}_blank${i}`;
+            div.innerHTML += `<input type='text' id='${id}' class='blank-input' placeholder='빈칸 ${key || i + 1} 입력'>`;
+          });
+  
+          container.appendChild(div);
         });
-
-        container.appendChild(div);
-      });
-    }
-
-    function submitQuiz() {
-      let score = 0;
-      let total = 0;
-
-      currentSet.forEach((q, qIndex) => {
-        const keys = Object.keys(q.answers);
-        total += keys.length;
-        keys.forEach((key, i) => {
-          const id = `q${qIndex}_blank${i}`;
-          const input = document.getElementById(id);
-          const expected = q.answers[key].replace(/\s+/g, '');
-          const userInput = input.value.replace(/\s+/g, '');
-          if (userInput === expected) {
-            score++;
-          }
+      }
+  
+      function submitQuiz() {
+        let score = 0;
+        let total = 0;
+  
+        currentSet.forEach((q, qIndex) => {
+          const keys = Object.keys(q.answers);
+          total += keys.length;
+          keys.forEach((key, i) => {
+            const id = `q${qIndex}_blank${i}`;
+            const input = document.getElementById(id);
+            const expected = q.answers[key].replace(/\s+/g, '');
+            const userInput = input.value.replace(/\s+/g, '');
+  
+            input.classList.remove('incorrect');
+  
+            if (userInput === expected) {
+              score++;
+            } else {
+              input.classList.add('incorrect');
+            }
+          });
         });
-      });
-
-      document.getElementById('result').innerText = `총 점수: ${score} / ${total}`;
-    }
-
-    function goHome() {
-      document.getElementById('quiz-area').classList.add('hidden');
-      document.getElementById('set-selection').classList.remove('hidden');
-      document.getElementById('result').innerText = '';
-    }
-  </script>
-</body>
-</html>
+  
+        document.getElementById('result').innerText = `총 점수: ${score} / ${total}`;
+      }
+  
+      function goHome() {
+        document.getElementById('quiz-area').classList.add('hidden');
+        document.getElementById('set-selection').classList.remove('hidden');
+        document.getElementById('result').innerText = '';
+      }
+    </script>
+  </body>
+  </html>
