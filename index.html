@@ -15,9 +15,23 @@
   <title>생활체육지도사 모의고사</title>
   <style>
     body { font-family: sans-serif; padding: 20px; margin: 0; }
-    .question { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #ddd; }
-    .blank-input { width: 100%; max-width: 300px; margin: 10px auto 20px auto; padding: 8px; font-size: 16px; display: block; }
-    .blank-input.incorrect { border: 2px solid red; background-color: #ffecec; }
+    .question {
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    .blank-input {
+      width: 100%;
+      max-width: 300px;
+      margin: 10px auto 20px auto;
+      padding: 8px;
+      font-size: 16px;
+      display: block;
+    }
+    .blank-input.incorrect {
+      border: 2px solid red;
+      background-color: #ffecec;
+    }
     .hidden { display: none; }
     .button-column button {
       display: block;
@@ -34,12 +48,14 @@
 </head>
 <body>
   <h1>생활체육지도사 보디빌딩 구술 문제집</h1>
+
   <div id="set-selection" class="button-column">
     <p>모의고사를 선택하세요.</p>
     <button onclick="loadSet(1)">협회최신규정 / 웨이트 트레이닝</button>
     <button onclick="loadSet(2)">종목 소개 / 과학적 지도방법</button>
     <button onclick="loadSet(3)">스포츠인권 / 규정포즈</button>
     <button onclick="loadSet(4)">생활체육개요 / 응급처치</button>
+    <button onclick="showAnswers()">정답 보기</button>
   </div>
 
   <div id="quiz-area" class="hidden">
@@ -51,7 +67,7 @@
   </div>
 
   <script>
-    const quizSets = {
+        const quizSets = {
       1: [
         {
           "question": "도핑 방지 규정에 따라, 치료 목적 사용 면책 제도를 _____라고 한다.",
@@ -229,55 +245,84 @@
     }
 
     function renderQuiz() {
-        const container = document.getElementById('quiz-container');
-        container.innerHTML = '';
-  
-        currentSet.forEach((q, qIndex) => {
-          const div = document.createElement('div');
-          div.className = 'question';
-          div.innerHTML = `<strong>문제 ${qIndex + 1}.</strong><br><div style='margin-top: 10px; margin-bottom: 10px;'>${q.question}</div>`;
-  
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = '';
+
+      currentSet.forEach((q, qIndex) => {
+        const div = document.createElement('div');
+        div.className = 'question';
+        div.innerHTML = `<strong>문제 ${qIndex + 1}.</strong><br><div style='margin-top: 10px; margin-bottom: 10px;'>${q.question}</div>`;
+
+        const keys = Object.keys(q.answers);
+        keys.forEach((key, i) => {
+          const id = `q${qIndex}_blank${i}`;
+          div.innerHTML += `<input type='text' id='${id}' class='blank-input' placeholder='빈칸 ${key || i + 1} 입력'>`;
+        });
+
+        container.appendChild(div);
+      });
+    }
+
+    function submitQuiz() {
+      let score = 0;
+      let total = 0;
+
+      currentSet.forEach((q, qIndex) => {
+        const keys = Object.keys(q.answers);
+        total += keys.length;
+        keys.forEach((key, i) => {
+          const id = `q${qIndex}_blank${i}`;
+          const input = document.getElementById(id);
+          const expected = q.answers[key].replace(/\s+/g, '');
+          const userInput = input.value.replace(/\s+/g, '');
+          input.classList.remove('incorrect');
+          if (userInput === expected) {
+            score++;
+          } else {
+            input.classList.add('incorrect');
+          }
+        });
+      });
+
+      document.getElementById('result').innerText = `총 점수: ${score} / ${total}`;
+    }
+
+    function goHome() {
+      document.getElementById('quiz-area').classList.add('hidden');
+      document.getElementById('set-selection').classList.remove('hidden');
+      document.getElementById('result').innerText = '';
+    }
+
+    function showAnswers() {
+      const win = window.open('', '_blank');
+      win.document.write('<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>정답 보기</title>');
+      win.document.write('<style>body{font-family:sans-serif;padding:20px;} .question{margin-bottom:30px;} ul{margin-top:10px;}</style>');
+      win.document.write('</head><body><h1>정답 보기</h1>');
+
+      Object.keys(quizSets).forEach(setNumber => {
+        const set = quizSets[setNumber];
+        win.document.write(`<h2>SET ${setNumber}</h2>`);
+        
+        set.forEach((q, qIndex) => {
+          win.document.write(`<div class="question"><strong>문제 ${qIndex + 1}.</strong><br><div style="margin:10px 0;">${q.question}</div><ul>`);
+          
           const keys = Object.keys(q.answers);
           keys.forEach((key, i) => {
-            const id = `q${qIndex}_blank${i}`;
-            div.innerHTML += `<input type='text' id='${id}' class='blank-input' placeholder='빈칸 ${key || i + 1} 입력'>`;
+            const label = key || i + 1;
+            win.document.write(`<li><strong>빈칸 ${label}:</strong> ${q.answers[key]}</li>`);
           });
-  
-          container.appendChild(div);
+
+          win.document.write('</ul></div>');
         });
-      }
-  
-      function submitQuiz() {
-        let score = 0;
-        let total = 0;
-  
-        currentSet.forEach((q, qIndex) => {
-          const keys = Object.keys(q.answers);
-          total += keys.length;
-          keys.forEach((key, i) => {
-            const id = `q${qIndex}_blank${i}`;
-            const input = document.getElementById(id);
-            const expected = q.answers[key].replace(/\s+/g, '');
-            const userInput = input.value.replace(/\s+/g, '');
-  
-            input.classList.remove('incorrect');
-  
-            if (userInput === expected) {
-              score++;
-            } else {
-              input.classList.add('incorrect');
-            }
-          });
-        });
-  
-        document.getElementById('result').innerText = `총 점수: ${score} / ${total}`;
-      }
-  
-      function goHome() {
-        document.getElementById('quiz-area').classList.add('hidden');
-        document.getElementById('set-selection').classList.remove('hidden');
-        document.getElementById('result').innerText = '';
-      }
-    </script>
-  </body>
+      });
+
+      win.document.write('<button onclick="window.close()" style="margin-top: 20px;">창 닫기</button>');
+      win.document.write('</body></html>');
+      win.document.close();
+    }
+  </script>
+</body>
+</html>
+
+
   </html>
